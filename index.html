@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tools.killedbyclaude.com</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0a0c;
+            --bg-surface: #131316;
+            --bg-raised: #1a1a1f;
+            --bg-hover: #222228;
+            --accent: #c97d4a;
+            --accent-dim: #a5623a;
+            --text-primary: #e8e4df;
+            --text-secondary: #9d9a94;
+            --text-muted: #5e5c57;
+            --border: #2a2a2f;
+            --border-light: #3a3a40;
+            --font-display: 'DM Serif Display', serif;
+            --font-body: 'Source Sans 3', sans-serif;
+            --font-mono: 'IBM Plex Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+        }
+
+        /* Header */
+        .site-header {
+            margin-bottom: 2rem;
+        }
+        .site-title {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            color: var(--text-primary);
+            margin-bottom: 0.6rem;
+        }
+        .site-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .site-desc {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+        .site-desc a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .site-desc a:hover {
+            text-decoration: underline;
+        }
+
+        /* Search */
+        .search-wrap {
+            margin: 1.8rem 0;
+        }
+        .search-label {
+            font-family: var(--font-display);
+            font-size: 1.05rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .search-hint {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+        .search-input {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.15s;
+            margin-top: 0.4rem;
+        }
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+        .search-input:focus {
+            border-color: var(--accent-dim);
+        }
+        .tool-count {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            margin-top: 0.4rem;
+        }
+        .no-results {
+            padding: 2rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* Sections */
+        .section {
+            margin-top: 2.2rem;
+        }
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 0.7rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Recently added / updated lists */
+        .recent-list {
+            list-style: none;
+        }
+        .recent-list li {
+            display: flex;
+            align-items: baseline;
+            gap: 0.6rem;
+            padding: 0.25rem 0;
+            font-size: 0.88rem;
+        }
+        .recent-list a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .recent-list a:hover {
+            text-decoration: underline;
+        }
+        .recent-list .date {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        /* Category blocks */
+        .category {
+            margin-top: 2.2rem;
+        }
+        .category-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Tool entries (Simon-style: name — description on one line) */
+        .tool-list {
+            list-style: none;
+        }
+        .tool-list li {
+            padding: 0.35rem 0;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+        .tool-list li.hidden {
+            display: none;
+        }
+        .tool-list a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .tool-list a:hover {
+            text-decoration: underline;
+        }
+        .tool-list .tool-desc {
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        .site-footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+        .site-footer p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+        .site-footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        .site-footer a:hover {
+            color: var(--accent);
+        }
+
+        /* Search highlight */
+        mark {
+            background: rgba(201, 125, 74, 0.25);
+            color: var(--text-primary);
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+
+        /* Hide sections when searching */
+        .section.search-hidden,
+        .category.search-hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="site-header">
+            <h1 class="site-title"><a href="/">tools.killedbyclaude.com</a></h1>
+            <p class="site-desc">
+                Miscellaneous HTML+JavaScript tools built mostly with the help of LLMs.
+                Inspired by <a href="https://tools.simonwillison.net/">Simon Willison's tools</a>.
+                Part of <a href="https://killedbyclaude.com">killedbyclaude.com</a>.
+            </p>
+        </div>
+
+        <!-- Search -->
+        <div class="search-wrap">
+            <div class="search-label">Search tools</div>
+            <input
+                type="text"
+                class="search-input"
+                id="searchInput"
+                placeholder="Start typing to search all tools…"
+                autocomplete="off"
+            >
+            <div class="tool-count" id="toolCount"></div>
+        </div>
+
+        <div class="no-results" id="noResults">No tools match your search.</div>
+
+        <!-- Recently added -->
+        <div class="section" id="recentSection">
+            <div class="section-title">Recently added</div>
+            <ul class="recent-list" id="recentList"></ul>
+        </div>
+
+        <!-- Categories get rendered here -->
+        <div id="categories"></div>
+
+        <footer class="site-footer">
+            <p>
+                <a href="https://killedbyclaude.com">killedbyclaude.com</a> ·
+                <a href="https://github.com/friendlynokill/killedbyclaude-tools">View source</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+    // ====================================================================
+    // TOOL REGISTRY — Add new tools here. Everything else is automatic.
+    // ====================================================================
+    const TOOLS = [
+        {
+            id: 'timestamp',
+            name: 'Timestamp Converter',
+            desc: 'convert between Unix timestamps and human-readable dates',
+            href: 'timestamp.html',
+            category: 'Data & time',
+            added: '2026-02-08',
+            updated: '2026-02-08'
+        },
+        // ── Add new tools below this line ──
+        // {
+        //     id: 'json-yaml',
+        //     name: 'JSON to YAML',
+        //     desc: 'convert between JSON and YAML formats',
+        //     href: 'json-yaml.html',
+        //     category: 'Text & document',
+        //     added: '2026-02-09',
+        //     updated: '2026-02-09'
+        // },
+    ];
+
+    // ====================================================================
+    // Rendering
+    // ====================================================================
+
+    const searchInput = document.getElementById('searchInput');
+    const toolCountEl = document.getElementById('toolCount');
+    const noResultsEl = document.getElementById('noResults');
+    const recentSection = document.getElementById('recentSection');
+    const recentListEl = document.getElementById('recentList');
+    const categoriesEl = document.getElementById('categories');
+
+    // Show total count
+    toolCountEl.textContent = `${TOOLS.length} tool${TOOLS.length !== 1 ? 's' : ''} available to search.`;
+
+    // Render recently added (last 5, sorted newest first)
+    const recentTools = [...TOOLS]
+        .sort((a, b) => b.added.localeCompare(a.added))
+        .slice(0, 5);
+
+    recentListEl.innerHTML = recentTools.map(t => {
+        const d = new Date(t.added + 'T00:00:00');
+        const dateStr = d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+        return `<li><a href="${t.href}">${t.name}</a> <span class="date">— ${dateStr}</span></li>`;
+    }).join('');
+
+    // Group tools by category (preserving order of first appearance)
+    const categoryOrder = [];
+    const categoryMap = {};
+    TOOLS.forEach(t => {
+        if (!categoryMap[t.category]) {
+            categoryMap[t.category] = [];
+            categoryOrder.push(t.category);
+        }
+        categoryMap[t.category].push(t);
+    });
+
+    // Render categories
+    categoriesEl.innerHTML = categoryOrder.map(cat => {
+        const tools = categoryMap[cat];
+        const toolsHtml = tools.map(t =>
+            `<li data-search="${(t.name + ' ' + t.desc + ' ' + t.category).toLowerCase()}">` +
+            `<a href="${t.href}">${t.name}</a> ` +
+            `<span class="tool-desc">${t.desc}</span>` +
+            `</li>`
+        ).join('');
+        return `<div class="category" data-category="${cat}">` +
+            `<div class="category-title">${cat}</div>` +
+            `<ul class="tool-list">${toolsHtml}</ul>` +
+            `</div>`;
+    }).join('');
+
+    // ====================================================================
+    // Search
+    // ====================================================================
+
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.trim().toLowerCase();
+        const items = document.querySelectorAll('.tool-list li');
+        let visibleCount = 0;
+
+        if (!query) {
+            // Reset: show everything
+            items.forEach(li => {
+                li.classList.remove('hidden');
+                // Remove highlights
+                const a = li.querySelector('a');
+                const span = li.querySelector('.tool-desc');
+                a.innerHTML = a.textContent;
+                span.innerHTML = span.textContent;
+            });
+            recentSection.classList.remove('search-hidden');
+            document.querySelectorAll('.category').forEach(c => c.classList.remove('search-hidden'));
+            noResultsEl.style.display = 'none';
+            toolCountEl.textContent = `${TOOLS.length} tool${TOOLS.length !== 1 ? 's' : ''} available to search.`;
+            return;
+        }
+
+        // Hide recent section when searching
+        recentSection.classList.add('search-hidden');
+
+        const terms = query.split(/\s+/);
+
+        items.forEach(li => {
+            const searchText = li.getAttribute('data-search');
+            const matches = terms.every(term => searchText.includes(term));
+            li.classList.toggle('hidden', !matches);
+            if (matches) {
+                visibleCount++;
+                // Highlight matches in name and desc
+                const a = li.querySelector('a');
+                const span = li.querySelector('.tool-desc');
+                a.innerHTML = highlightTerms(a.textContent, terms);
+                span.innerHTML = highlightTerms(span.textContent, terms);
+            }
+        });
+
+        // Hide empty categories
+        document.querySelectorAll('.category').forEach(cat => {
+            const visibleTools = cat.querySelectorAll('.tool-list li:not(.hidden)');
+            cat.classList.toggle('search-hidden', visibleTools.length === 0);
+        });
+
+        noResultsEl.style.display = visibleCount === 0 ? 'block' : 'none';
+        toolCountEl.textContent = `${visibleCount} of ${TOOLS.length} tools shown.`;
+    });
+
+    function highlightTerms(text, terms) {
+        let result = text;
+        terms.forEach(term => {
+            const regex = new RegExp(`(${escapeRegex(term)})`, 'gi');
+            result = result.replace(regex, '<mark>$1</mark>');
+        });
+        return result;
+    }
+
+    function escapeRegex(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // Keyboard shortcut: "/" to focus search
+    document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement !== searchInput) {
+            e.preventDefault();
+            searchInput.focus();
+        }
+    });
+    </script>
+</body>
+</html>
