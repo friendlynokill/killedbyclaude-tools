@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对账表月度汇总工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red-50: #fef2f2; --red-100: #fee2e2; --red-200: #fecaca;
+            --red-400: #f87171; --red-500: #ef4444; --red-600: #dc2626;
+            --red-700: #b91c1c; --red-800: #991b1b;
+            --white: #ffffff;
+            --gray-50: #fafafa; --gray-100: #f5f5f5; --gray-200: #e5e5e5;
+            --gray-300: #d4d4d4; --gray-400: #a3a3a3; --gray-500: #737373;
+            --gray-600: #525252; --gray-700: #404040; --gray-800: #262626;
+            --gray-900: #171717;
+            --radius: 12px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow: 0 2px 8px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Noto Sans SC', system-ui, -apple-system, sans-serif; background: var(--gray-50); color: var(--gray-800); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+        .header { background: var(--white); border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 100; }
+        .header-inner { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; }
+        .logo-mark { width: 38px; height: 38px; background: var(--red-600); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 1.1rem; flex-shrink: 0; box-shadow: 0 2px 8px rgba(220,38,38,0.3); }
+        .header-text h1 { font-size: 1.15rem; font-weight: 700; color: var(--gray-900); }
+        .header-text p { font-size: 0.78rem; color: var(--gray-400); margin-top: 0.1rem; }
+        .container { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+        .card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--gray-200); padding: 1.5rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); }
+        .card-label { font-size: 0.68rem; font-weight: 600; color: var(--red-600); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+        .controls-grid { display: grid; grid-template-columns: 1fr auto auto auto; gap: 1rem; align-items: end; }
+        .field label { display: block; font-size: 0.78rem; font-weight: 500; color: var(--gray-500); margin-bottom: 0.35rem; }
+        .file-input-wrap { position: relative; border: 1.5px dashed var(--gray-300); border-radius: 8px; padding: 0.6rem 0.8rem; cursor: pointer; transition: all 0.2s; background: var(--gray-50); display: flex; align-items: center; gap: 0.6rem; overflow: hidden; }
+        .file-input-wrap:hover { border-color: var(--red-400); background: var(--red-50); }
+        .file-input-wrap.has-file { border-color: var(--red-500); border-style: solid; background: var(--red-50); }
+        .file-input-wrap input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .file-icon { width: 28px; height: 28px; background: var(--red-100); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.85rem; }
+        .file-input-wrap.has-file .file-icon { background: var(--red-500); color: white; }
+        .file-text { font-size: 0.82rem; color: var(--gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-input-wrap.has-file .file-text { color: var(--red-700); font-weight: 500; }
+        select { width: 100%; padding: 0.6rem 2rem 0.6rem 0.75rem; border: 1.5px solid var(--gray-200); border-radius: 8px; font-family: inherit; font-size: 0.88rem; color: var(--gray-800); background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23737373' d='M3 4.5L6 8l3-3.5'/%3E%3C/svg%3E") no-repeat right 0.7rem center; appearance: none; cursor: pointer; transition: border-color 0.2s; }
+        select:focus { outline: none; border-color: var(--red-500); }
+        .btn { padding: 0.6rem 1.4rem; border: none; border-radius: 8px; font-family: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+        .btn-red { background: var(--red-600); color: white; box-shadow: 0 2px 6px rgba(220,38,38,0.25); }
+        .btn-red:hover { background: var(--red-700); box-shadow: 0 4px 12px rgba(220,38,38,0.3); transform: translateY(-1px); }
+        .btn-red:active { transform: translateY(0); }
+        .btn-red:disabled { background: var(--gray-300); box-shadow: none; cursor: not-allowed; transform: none; }
+        .btn-outline { background: white; color: var(--red-600); border: 1.5px solid var(--red-200); }
+        .btn-outline:hover { background: var(--red-50); border-color: var(--red-400); }
+        .status { margin-top: 0.8rem; padding: 0.6rem 0.8rem; border-radius: 8px; font-size: 0.82rem; display: none; align-items: center; gap: 0.5rem; }
+        .status.show { display: flex; }
+        .status.info { background: var(--red-50); color: var(--red-700); }
+        .status.error { background: #fef2f2; color: #991b1b; border: 1px solid var(--red-200); }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red-500); flex-shrink: 0; }
+        .status.error .status-dot { background: #991b1b; }
+        .results { display: none; }
+        .results.show { display: block; animation: fadeUp 0.35s ease; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .period-bar { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.82rem; color: var(--gray-500); margin-bottom: 1.2rem; padding: 0.7rem 1rem; background: var(--gray-50); border-radius: 8px; border: 1px solid var(--gray-200); }
+        .period-bar strong { color: var(--gray-700); }
+        .period-bar .sep { color: var(--gray-300); }
+        .period-bar .warn { color: var(--red-500); font-weight: 500; }
+        .entity-block { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; box-shadow: var(--shadow); }
+        .entity-top { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; background: linear-gradient(135deg, var(--red-600), var(--red-700)); color: white; }
+        .entity-name { font-size: 1.05rem; font-weight: 700; }
+        .entity-full { font-size: 0.68rem; background: rgba(255,255,255,0.18); padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 500; }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 1.25rem; border-bottom: 1px solid var(--gray-100); transition: background 0.15s; }
+        .summary-row:hover { background: var(--gray-50); }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-label { font-size: 0.88rem; color: var(--gray-600); }
+        .summary-value { font-family: 'DM Mono', monospace; font-size: 0.92rem; font-weight: 500; color: var(--gray-800); }
+        .summary-row.highlight { background: var(--red-50); border-bottom: 1px solid var(--red-100); }
+        .summary-row.highlight .summary-label { color: var(--red-700); font-weight: 600; }
+        .summary-row.highlight .summary-value { color: var(--red-700); font-weight: 600; font-size: 1rem; }
+        .summary-divider { height: 1px; background: var(--gray-200); margin: 0 1.25rem; }
+        .daxie-row { padding: 0.5rem 1.25rem 0.7rem; font-size: 0.78rem; color: var(--gray-400); }
+        .daxie-row strong { color: var(--gray-500); font-weight: 500; }
+        .detail-toggle-row { padding: 0 1.25rem 1rem; }
+        .detail-toggle { font-size: 0.78rem; color: var(--red-500); cursor: pointer; background: none; border: 1px solid var(--red-200); border-radius: 6px; padding: 0.35rem 0.8rem; font-family: inherit; font-weight: 500; transition: all 0.15s; }
+        .detail-toggle:hover { background: var(--red-50); border-color: var(--red-400); }
+        .detail-section { display: none; border-top: 1px solid var(--gray-200); background: var(--gray-50); padding: 1rem 1.25rem; }
+        .detail-section.show { display: block; animation: fadeUp 0.25s ease; }
+        .detail-group-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin: 0.8rem 0 0.4rem; display: flex; align-items: center; gap: 0.4rem; color: var(--gray-600); }
+        .detail-group-title:first-child { margin-top: 0; }
+        .detail-group-title .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .detail-group-title.payment .dot { background: var(--red-500); }
+        .detail-group-title.refund .dot { background: var(--gray-400); }
+        .detail-group-title.delivery .dot { background: #10b981; }
+        .detail-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-bottom: 0.5rem; }
+        .detail-table th { text-align: left; padding: 0.4rem 0.6rem; font-weight: 500; color: var(--gray-400); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--gray-200); }
+        .detail-table td { padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--gray-200); color: var(--gray-700); }
+        .detail-table .amt { text-align: right; font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+        .detail-table .date { text-align: center; color: var(--gray-400); }
+        .detail-table .tag { font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 4px; background: var(--red-50); color: var(--red-600); border: 1px solid var(--red-100); white-space: nowrap; }
+        .detail-table .empty-row td { color: var(--gray-400); font-style: italic; padding: 0.6rem; }
+        .detail-table .sum-row td { border-top: 2px solid var(--gray-300); border-bottom: none; font-weight: 600; color: var(--gray-800); padding-top: 0.5rem; }
+        .detail-table .sum-row .amt { color: var(--red-700); }
+        .actions-bar { display: flex; gap: 0.6rem; margin-top: 0.5rem; flex-wrap: wrap; }
+        @media (max-width: 640px) { .controls-grid { grid-template-columns: 1fr 1fr; } .controls-grid .field:first-child, .controls-grid .field:last-child { grid-column: 1 / -1; } .container { padding: 1rem; } .entity-top { flex-direction: column; align-items: flex-start; gap: 0.4rem; } }
+    </style>
+</head>
+<body>
+    <div class="header"><div class="header-inner"><div class="logo-mark">对</div><div class="header-text"><h1>对账表月度汇总</h1><p>上传 Excel → 选择月份 → 按收款主体生成汇总</p></div></div></div>
+    <div class="container">
+        <div class="card">
+            <div class="card-label">配置</div>
+            <div class="controls-grid">
+                <div class="field"><label>对账表文件</label><div class="file-input-wrap" id="fileWrap"><div class="file-icon">📄</div><span class="file-text" id="fileText">选择 .xlsx 文件...</span><input type="file" id="fileInput" accept=".xlsx,.xls"></div></div>
+                <div class="field"><label>年份</label><select id="yearSelect"></select></div>
+                <div class="field"><label>月份</label><select id="monthSelect"></select></div>
+                <div class="field"><label>&nbsp;</label><button class="btn btn-red" id="processBtn" disabled onclick="process()">生成汇总</button></div>
+            </div>
+            <div class="status" id="statusMsg"><div class="status-dot"></div><span id="statusText"></span></div>
+        </div>
+        <div class="results" id="results"></div>
+    </div>
+<script>
+// ===== Year/Month selectors =====
+const now = new Date();
+const yearSel = document.getElementById('yearSelect');
+const monthSel = document.getElementById('monthSelect');
+for (let y = 2025; y <= now.getFullYear(); y++) {
+    const o = document.createElement('option'); o.value = y; o.textContent = y + '年';
+    if (y === now.getFullYear()) o.selected = true; yearSel.appendChild(o);
+}
+for (let m = 1; m <= 12; m++) {
+    const o = document.createElement('option'); o.value = m; o.textContent = m + '月';
+    if (m === (now.getMonth() === 0 ? 12 : now.getMonth())) o.selected = true;
+    monthSel.appendChild(o);
+}
+if (now.getMonth() === 0) yearSel.value = now.getFullYear() - 1;
+
+let sheetRows = null, rawWorkbook = null;
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    document.getElementById('fileText').textContent = file.name;
+    document.getElementById('fileWrap').classList.add('has-file');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            // KEY FIX: Do NOT use cellDates. Dates stay as serial numbers.
+            // This avoids all timezone issues from JS Date local-vs-UTC.
+            rawWorkbook = XLSX.read(e.target.result, { type: 'array' });
+            const sheet = rawWorkbook.Sheets[rawWorkbook.SheetNames[0]];
+            sheetRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null, raw: true });
+            document.getElementById('processBtn').disabled = false;
+            showStatus('文件加载成功，共 ' + (sheetRows.length - 1) + ' 行数据', 'info');
+        } catch (err) { showStatus('文件读取失败: ' + err.message, 'error'); }
+    };
+    reader.readAsArrayBuffer(file);
+});
+
+function showStatus(msg, type) {
+    const el = document.getElementById('statusMsg');
+    el.className = 'status show ' + type;
+    document.getElementById('statusText').textContent = msg;
+}
+
+// ===== DATE HANDLING =====
+// Without cellDates, Excel dates come as serial numbers (plain numbers).
+// Excel serial: 1 = Jan 1 1900. Due to Lotus 1-2-3 bug, serial 60 = fake Feb 29 1900.
+// We convert to a plain {y, m, d} object to avoid ANY timezone issues.
+function serialToYMD(serial) {
+    // Use the standard (serial - 25569) approach to get Unix days, then extract UTC date
+    const ms = Math.round((serial - 25569) * 86400000);
+    const d = new Date(ms);
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate() };
+}
+
+function parseDate(v) {
+    if (v == null || v === '' || v === '/' || v === '—' || v === '-') return null;
+    if (typeof v === 'number' && v > 1000) {
+        // Excel serial number
+        return serialToYMD(v);
+    }
+    if (typeof v === 'string') {
+        const s = v.trim();
+        if (!s || s === '/' || s === '-') return null;
+        const match = s.match(/(\d{4})[\-\/\.](\d{1,2})[\-\/\.](\d{1,2})/);
+        if (match) return { y: parseInt(match[1]), m: parseInt(match[2]), d: parseInt(match[3]) };
+    }
+    if (v instanceof Date && !isNaN(v.getTime())) {
+        // Fallback: extract local components (shouldn't happen without cellDates)
+        return { y: v.getFullYear(), m: v.getMonth() + 1, d: v.getDate() };
+    }
+    return null;
+}
+
+// Compare YMD objects against a year/month range
+function ymdInMonth(ymd, year, month) {
+    return ymd && ymd.y === year && ymd.m === month;
+}
+function ymdOnOrBeforeMonthEnd(ymd, year, month) {
+    if (!ymd) return false;
+    if (ymd.y < year) return true;
+    if (ymd.y === year && ymd.m < month) return true;
+    if (ymd.y === year && ymd.m === month) return true;
+    return false;
+}
+function ymdToString(ymd) {
+    if (!ymd) return '';
+    return ymd.y + '-' + String(ymd.m).padStart(2, '0') + '-' + String(ymd.d).padStart(2, '0');
+}
+// For sorting: convert to comparable number
+function ymdSort(ymd) { return ymd.y * 10000 + ymd.m * 100 + ymd.d; }
+
+function daysIn(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
+function parseNum(v) { if (v == null || v === '' || v === '/' || v === '—') return 0; const n = Number(v); return isNaN(n) ? 0 : n; }
+function fmtMoney(n) { return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+function toDaxie(n) {
+    if (n === 0) return '零元整';
+    const D = ['零','壹','贰','叁','肆','伍','陆','柒','捌','玖'], U = ['','拾','佰','仟'], B = ['','万','亿'];
+    const yuan = Math.floor(n), jiao = Math.floor((n * 10) % 10), fen = Math.floor((n * 100) % 10);
+    let r = '';
+    if (yuan > 0) {
+        const s = String(yuan); let zf = false; const gs = [];
+        for (let i = s.length - 1, g = 0; i >= 0; g++) {
+            let grp = '', az = true;
+            for (let j = 0; j < 4 && i >= 0; j++, i--) {
+                const d = parseInt(s[i]);
+                if (d === 0) zf = true;
+                else { az = false; if (zf) { grp = D[0] + grp; zf = false; } grp = D[d] + U[j] + grp; }
+            }
+            gs.push({ t: grp, az, u: B[g] || '' });
+        }
+        for (let i = gs.length - 1; i >= 0; i--) {
+            if (!gs[i].az) r += gs[i].t + gs[i].u;
+            else if (i > 0 && !gs[i - 1].az && r.length > 0) r += D[0];
+        }
+        r += '元';
+    }
+    if (jiao === 0 && fen === 0) r += '整';
+    else { if (jiao > 0) r += D[jiao] + '角'; else if (yuan > 0) r += D[0]; if (fen > 0) r += D[fen] + '分'; }
+    return r;
+}
+
+function shortName(full) {
+    let m = full.match(/^.{2}(.+?)(?:科技|网络|信息|文化|传媒|咨询|投资)/);
+    if (m) return m[1];
+    let s = full.replace(/^(北京|上海|深圳|广州|杭州|成都|天津|南京|武汉|重庆)/, '');
+    s = s.replace(/(科技|网络|信息|文化|传媒|咨询|投资)?(有限公司|有限责任公司|股份有限公司|集团)$/g, '');
+    return s || full.substring(0, 4);
+}
+
+// ===== Delivery column parsing =====
+function parseDeliveryColumns(headers) {
+    const cols = [];
+    const re = /^(\d{4})\.(\d{1,2})\.(\d{1,2})-(\d{4})\.(\d{1,2})\.(\d{1,2})交付金额$/;
+    for (let i = 0; i < headers.length; i++) {
+        const h = String(headers[i] || '').trim();
+        const m = h.match(re);
+        if (m) {
+            cols.push({
+                col: i, name: h,
+                startY: +m[1], startM: +m[2],
+                endY: +m[4], endM: +m[5], endD: +m[6]
+            });
+        }
+    }
+    return cols;
+}
+
+function findCurrentMonthDelCol(delCols, year, month) {
+    for (const c of delCols) {
+        if (c.startY === year && c.startM === month && c.endY === year && c.endM === month) return c;
+    }
+    for (const c of delCols) {
+        if (c.startY <= year && c.startM <= month && c.endY >= year && c.endM >= month) return c;
+    }
+    return null;
+}
+
+function selectCumulativeDelCols(delCols, year, month) {
+    // Filter to columns ending on or before target month
+    const eligible = delCols.filter(c => {
+        if (c.endY < year) return true;
+        if (c.endY === year && c.endM <= month) return true;
+        return false;
+    });
+    // Sort: prefer later end, then earlier start (wider spans first)
+    eligible.sort((a, b) => {
+        const ae = a.endY * 100 + a.endM, be = b.endY * 100 + b.endM;
+        if (be !== ae) return be - ae;
+        return (a.startY * 100 + a.startM) - (b.startY * 100 + b.startM);
+    });
+    // Greedy non-overlapping
+    const selected = [];
+    for (const c of eligible) {
+        const overlaps = selected.some(s => {
+            const cS = c.startY * 100 + c.startM, cE = c.endY * 100 + c.endM;
+            const sS = s.startY * 100 + s.startM, sE = s.endY * 100 + s.endM;
+            return cS <= sE && cE >= sS;
+        });
+        if (!overlaps) selected.push(c);
+    }
+    return selected;
+}
+
+function findCol(headers, name) {
+    for (let i = 0; i < headers.length; i++) if (String(headers[i] || '').trim() === name) return i;
+    return -1;
+}
+
+function process() {
+    if (!sheetRows) return;
+    const year = parseInt(yearSel.value), month = parseInt(monthSel.value);
+    const headers = sheetRows[0];
+
+    const col = {
+        entity: findCol(headers, '收款主体'), acct: findCol(headers, '账号名'),
+        amtRcv: findCol(headers, '已收款金额'), payTime: findCol(headers, '收款时间'),
+        amtRef: findCol(headers, '已退款金额'), refTime: findCol(headers, '退款时间'),
+        income: findCol(headers, '收入金额'), pkg: findCol(headers, '套餐类型'),
+    };
+    const missing = [];
+    if (col.entity < 0) missing.push('收款主体'); if (col.amtRcv < 0) missing.push('已收款金额');
+    if (col.payTime < 0) missing.push('收款时间'); if (col.income < 0) missing.push('收入金额');
+    if (missing.length) { showStatus('找不到以下列: ' + missing.join(', '), 'error'); return; }
+
+    const allDelCols = parseDeliveryColumns(headers);
+    const curDelCol = findCurrentMonthDelCol(allDelCols, year, month);
+    const cumDelCols = selectCumulativeDelCols(allDelCols, year, month);
+
+    const ents = {}; let lastA = '', lastPkg = '';
+    for (let i = 1; i < sheetRows.length; i++) {
+        const row = sheetRows[i];
+        const ent = row[col.entity]; if (!ent) continue;
+        const acct = row[col.acct] || lastA; if (row[col.acct]) lastA = row[col.acct];
+        const pkgType = row[col.pkg] || lastPkg || ''; if (row[col.pkg]) lastPkg = row[col.pkg];
+        if (!ents[ent]) ents[ent] = { pays: [], refs: [], dels: [], tRcv: 0, tRef: 0, tDel: 0, tUnd: 0 };
+        const e = ents[ent];
+
+        const pt = parseDate(row[col.payTime]);
+        const rt = col.refTime >= 0 ? parseDate(row[col.refTime]) : null;
+        const aR = parseNum(row[col.amtRcv]);
+        const aF = col.amtRef >= 0 ? parseNum(row[col.amtRef]) : 0;
+        const income = col.income >= 0 ? parseNum(row[col.income]) : 0;
+
+        if (ymdInMonth(pt, year, month)) { e.tRcv += aR; e.pays.push({ name: acct, amt: aR, date: pt, pkg: pkgType }); }
+        if (ymdInMonth(rt, year, month)) { e.tRef += aF; e.refs.push({ name: acct, amt: aF, date: rt, pkg: pkgType }); }
+        if (curDelCol) {
+            const da = parseNum(row[curDelCol.col]); if (da > 0) { e.tDel += da; e.dels.push({ name: acct, amt: da, pkg: pkgType }); }
+        }
+        if (ymdOnOrBeforeMonthEnd(pt, year, month)) {
+            let cumDel = 0;
+            for (const dc of cumDelCols) cumDel += parseNum(row[dc.col]);
+            e.tUnd += income - cumDel;
+        }
+    }
+    Object.values(ents).forEach(e => {
+        e.pays.sort((a, b) => ymdSort(a.date) - ymdSort(b.date));
+        e.refs.sort((a, b) => ymdSort(a.date) - ymdSort(b.date));
+    });
+
+    const el = document.getElementById('results'); el.classList.add('show');
+    let h = '<div class="period-bar"><strong>统计期间</strong> ' + year + '年' + month + '月1日 — ' + year + '年' + month + '月' + daysIn(year, month) + '日';
+    h += '<span class="sep">|</span>';
+    h += curDelCol ? '<strong>交付列</strong> ' + curDelCol.name : '<span class="warn">⚠ 未找到当月交付金额列</span>';
+    h += '<span class="sep">|</span><strong>累计交付列</strong> ' + (cumDelCols.length ? cumDelCols.map(c => c.name).join(' + ') : '无');
+    h += '</div>';
+
+    Object.keys(ents).sort().forEach((en, idx) => {
+        const e = ents[en], conf = e.tRcv - e.tRef, sn = shortName(en), did = 'det-' + idx;
+        h += '<div class="entity-block"><div class="entity-top"><span class="entity-name">' + sn + '</span><span class="entity-full">' + en + '</span></div><div class="entity-body">';
+        [['收款金额', fmtMoney(e.tRcv), 0], ['退款金额', fmtMoney(e.tRef), 0], ['_'], ['确认收入金额', fmtMoney(conf), 1], ['_'], ['当月完成交付金额', fmtMoney(e.tDel), 0], ['截至到月底未完成交付金额', fmtMoney(e.tUnd), 0]].forEach(r => {
+            if (r[0] === '_') { h += '<div class="summary-divider"></div>'; return; }
+            h += '<div class="summary-row' + (r[2] ? ' highlight' : '') + '"><span class="summary-label">' + r[0] + '</span><span class="summary-value">' + r[1] + '</span></div>';
+        });
+        h += '<div class="daxie-row"><strong>大写：</strong>' + toDaxie(conf) + '</div>';
+        h += '<div class="detail-toggle-row"><button class="detail-toggle" onclick="togDet(\'' + did + '\',this)">展开明细 ↓</button></div>';
+        h += '<div class="detail-section" id="' + did + '">';
+
+        h += '<div class="detail-group-title payment"><span class="dot"></span>收款明细</div>';
+        if (e.pays.length) {
+            h += '<table class="detail-table"><tr><th>账号名</th><th>套餐类型</th><th style="text-align:right">金额</th><th style="text-align:center">时间</th></tr>';
+            e.pays.forEach(p => h += '<tr><td>' + p.name + '</td><td><span class="tag">' + (p.pkg || '—') + '</span></td><td class="amt">' + fmtMoney(p.amt) + '</td><td class="date">' + ymdToString(p.date) + '</td></tr>');
+            h += '<tr class="sum-row"><td></td><td>合计</td><td class="amt">' + fmtMoney(e.tRcv) + '</td><td></td></tr></table>';
+        } else h += '<table class="detail-table"><tr class="empty-row"><td>本月无收款记录</td></tr></table>';
+
+        h += '<div class="detail-group-title refund"><span class="dot"></span>退款明细</div>';
+        if (e.refs.length) {
+            h += '<table class="detail-table"><tr><th>账号名</th><th>套餐类型</th><th style="text-align:right">金额</th><th style="text-align:center">时间</th></tr>';
+            e.refs.forEach(r => h += '<tr><td>' + r.name + '</td><td><span class="tag">' + (r.pkg || '—') + '</span></td><td class="amt">' + fmtMoney(r.amt) + '</td><td class="date">' + ymdToString(r.date) + '</td></tr>');
+            h += '<tr class="sum-row"><td></td><td>合计</td><td class="amt">' + fmtMoney(e.tRef) + '</td><td></td></tr></table>';
+        } else h += '<table class="detail-table"><tr class="empty-row"><td>本月无退款记录</td></tr></table>';
+
+        h += '<div class="detail-group-title delivery"><span class="dot"></span>交付明细</div>';
+        if (e.dels.length) {
+            h += '<table class="detail-table"><tr><th>账号名</th><th>套餐类型</th><th style="text-align:right">交付金额</th></tr>';
+            e.dels.forEach(d => h += '<tr><td>' + d.name + '</td><td><span class="tag">' + (d.pkg || '—') + '</span></td><td class="amt">' + fmtMoney(d.amt) + '</td></tr>');
+            h += '<tr class="sum-row"><td></td><td>合计</td><td class="amt">' + fmtMoney(e.tDel) + '</td></tr></table>';
+        } else h += '<table class="detail-table"><tr class="empty-row"><td>' + (!curDelCol ? '未找到当月交付列' : '本月无交付记录') + '</td></tr></table>';
+
+        h += '</div></div></div>';
+    });
+    h += '<div class="actions-bar"><button class="btn btn-red" onclick="dlExcel()">⬇ 下载 Excel</button><button class="btn btn-outline" onclick="copyOA()">📋 复制 OA 数据</button></div>';
+    el.innerHTML = h;
+    window._lr = { ents, year, month, curDelCol, cumDelCols };
+    showStatus(year + '年' + month + '月汇总生成完成', 'info');
+}
+
+function togDet(id, btn) { const el = document.getElementById(id); el.classList.toggle('show'); btn.textContent = el.classList.contains('show') ? '收起明细 ↑' : '展开明细 ↓'; }
+
+function dlExcel() {
+    if (!rawWorkbook || !window._lr) return;
+    const { ents, year, month } = window._lr, wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, rawWorkbook.Sheets[rawWorkbook.SheetNames[0]], '对账表');
+    Object.keys(ents).sort().forEach(en => {
+        const e = ents[en], conf = e.tRcv - e.tRef, sn = shortName(en);
+        const rows = [['对账汇总 - ' + sn], [], ['统计期间', year + '年' + month + '月1日 - ' + year + '年' + month + '月' + daysIn(year, month) + '日'], ['收款主体', en], [], ['项目', '金额 (元)'], ['收款金额', e.tRcv], ['退款金额', e.tRef], ['确认收入金额', conf], ['当月完成交付金额', e.tDel], ['截至到月底未完成交付金额', e.tUnd], [], ['大写', toDaxie(conf)], [], ['当月收款明细'], ['账号名', '套餐类型', '已收款金额', '收款时间']];
+        if (e.pays.length) { e.pays.forEach(p => rows.push([p.name, p.pkg, p.amt, ymdToString(p.date)])); rows.push(['', '合计', e.tRcv, '']); } else rows.push(['（本月无收款记录）']);
+        rows.push([], ['当月退款明细'], ['账号名', '套餐类型', '已退款金额', '退款时间']);
+        if (e.refs.length) { e.refs.forEach(r => rows.push([r.name, r.pkg, r.amt, ymdToString(r.date)])); rows.push(['', '合计', e.tRef, '']); } else rows.push(['（本月无退款记录）']);
+        rows.push([], ['当月交付明细'], ['账号名', '套餐类型', '交付金额']);
+        if (e.dels.length) { e.dels.forEach(d => rows.push([d.name, d.pkg, d.amt])); rows.push(['', '合计', e.tDel]); } else rows.push(['（本月无交付记录）']);
+        const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{ wch: 24 }, { wch: 22 }, { wch: 16 }, { wch: 14 }];
+        XLSX.utils.book_append_sheet(wb, ws, sn + '-' + year + '年' + month + '月');
+    });
+    XLSX.writeFile(wb, '对账表_' + year + '年' + month + '月汇总.xlsx');
+}
+
+function copyOA() {
+    if (!window._lr) return; const { ents, year, month } = window._lr; let t = '';
+    Object.keys(ents).sort().forEach(en => {
+        const e = ents[en], conf = e.tRcv - e.tRef, sn = shortName(en);
+        t += '【' + sn + '】\n所属月份-开始时间: ' + year + '-' + String(month).padStart(2, '0') + '-01\n所属月份-结束时间: ' + year + '-' + String(month).padStart(2, '0') + '-' + daysIn(year, month) + '\n';
+        t += '收款金额（元）: ' + fmtMoney(e.tRcv) + '\n退款金额（元）: ' + fmtMoney(e.tRef) + '\n确认收入金额: ' + fmtMoney(conf) + '\n大写: ' + toDaxie(conf) + '\n';
+        t += '当月完成交付金额（元）: ' + fmtMoney(e.tDel) + '\n截止到当月底未完成交付金额（元）: ' + fmtMoney(e.tUnd) + '\n\n';
+    });
+    navigator.clipboard.writeText(t.trim()).then(() => { const btn = document.querySelector('.btn-outline[onclick="copyOA()"]'); const o = btn.innerHTML; btn.innerHTML = '✓ 已复制'; setTimeout(() => btn.innerHTML = o, 1500); });
+}
+</script>
+</body>
+</html>
