@@ -3,26 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1A1715">
     <title>tools.killedbyclaude.com</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-deep: #0a0a0c;
-            --bg-surface: #131316;
-            --bg-raised: #1a1a1f;
-            --bg-hover: #222228;
-            --accent: #c97d4a;
-            --accent-dim: #a5623a;
-            --text-primary: #e8e4df;
-            --text-secondary: #9d9a94;
-            --text-muted: #5e5c57;
-            --border: #2a2a2f;
-            --border-light: #3a3a40;
-            --font-display: 'DM Serif Display', serif;
-            --font-body: 'Source Sans 3', sans-serif;
-            --font-mono: 'IBM Plex Mono', monospace;
+            --bg-deep: #1A1715;
+            --bg-surface: #211D19;
+            --bg-card: #262220;
+            --bg-card-hover: #2E2926;
+            --accent: #E8784A;
+            --accent-bright: #F09070;
+            --accent-dim: #C45E32;
+            --accent-glow: rgba(232, 120, 74, 0.15);
+            --text-primary: #F5F0EB;
+            --text-secondary: #B8AFA5;
+            --text-muted: #7A7268;
+            --border: rgba(245, 240, 235, 0.08);
+            --border-light: rgba(245, 240, 235, 0.05);
+            --border-accent: rgba(232, 120, 74, 0.18);
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Menlo', monospace;
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 8px 32px rgba(0, 0, 0, 0.18);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,12 +39,26 @@
             color: var(--text-primary);
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 15% -5%, rgba(232, 120, 74, 0.06), transparent),
+                radial-gradient(ellipse 50% 40% at 85% 8%, rgba(180, 140, 100, 0.03), transparent);
+            pointer-events: none;
         }
 
         .container {
             max-width: 720px;
             margin: 0 auto;
-            padding: 2.5rem 1.5rem 4rem;
+            padding: 2rem 1.5rem 3.5rem;
+            position: relative;
+            z-index: 1;
         }
 
         /* Header */
@@ -46,17 +66,22 @@
             margin-bottom: 2rem;
         }
         .site-title {
-            font-family: var(--font-display);
-            font-size: 1.6rem;
+            font-family: var(--font-body);
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
             color: var(--text-primary);
-            margin-bottom: 0.6rem;
+            margin-bottom: 0.5rem;
         }
         .site-title a {
             color: inherit;
             text-decoration: none;
         }
+        .site-title a:hover {
+            color: var(--accent);
+        }
         .site-desc {
-            font-size: 0.92rem;
+            font-size: 0.88rem;
             color: var(--text-secondary);
             line-height: 1.55;
         }
@@ -65,66 +90,71 @@
             text-decoration: none;
         }
         .site-desc a:hover {
-            text-decoration: underline;
+            color: var(--accent-bright);
         }
 
         /* Search */
         .search-wrap {
-            margin: 1.8rem 0;
+            margin: 1.5rem 0;
         }
         .search-label {
-            font-family: var(--font-display);
-            font-size: 1.05rem;
+            font-family: var(--font-body);
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
             color: var(--text-primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
         }
         .search-hint {
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             color: var(--text-muted);
             font-family: var(--font-mono);
         }
         .search-input {
             width: 100%;
-            padding: 0.65rem 0.9rem;
+            padding: 0.6rem 0.85rem;
             font-family: var(--font-mono);
-            font-size: 0.88rem;
-            background: var(--bg-surface);
+            font-size: 0.84rem;
+            background: var(--bg-card);
             color: var(--text-primary);
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             outline: none;
-            transition: border-color 0.15s;
-            margin-top: 0.4rem;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            margin-top: 0.35rem;
         }
         .search-input::placeholder {
             color: var(--text-muted);
         }
         .search-input:focus {
-            border-color: var(--accent-dim);
+            border-color: var(--border-accent);
+            box-shadow: 0 0 0 3px rgba(232, 120, 74, 0.08);
         }
         .tool-count {
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             color: var(--text-muted);
             font-family: var(--font-mono);
-            margin-top: 0.4rem;
+            margin-top: 0.35rem;
         }
         .no-results {
             padding: 2rem 0;
             text-align: center;
             color: var(--text-muted);
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             display: none;
         }
 
         /* Sections */
         .section {
-            margin-top: 2.2rem;
+            margin-top: 1.8rem;
         }
         .section-title {
-            font-family: var(--font-display);
-            font-size: 1.1rem;
+            font-family: var(--font-body);
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
             color: var(--text-primary);
-            margin-bottom: 0.7rem;
+            margin-bottom: 0.6rem;
             padding-bottom: 0.4rem;
             border-bottom: 1px solid var(--border);
         }
@@ -136,9 +166,9 @@
         .recent-list li {
             display: flex;
             align-items: baseline;
-            gap: 0.6rem;
-            padding: 0.25rem 0;
-            font-size: 0.88rem;
+            gap: 0.5rem;
+            padding: 0.3rem 0;
+            font-size: 0.86rem;
         }
         .recent-list a {
             color: var(--accent);
@@ -146,35 +176,37 @@
             font-weight: 500;
         }
         .recent-list a:hover {
-            text-decoration: underline;
+            color: var(--accent-bright);
         }
         .recent-list .date {
             font-family: var(--font-mono);
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             color: var(--text-muted);
             white-space: nowrap;
         }
 
         /* Category blocks */
         .category {
-            margin-top: 2.2rem;
+            margin-top: 1.8rem;
         }
         .category-title {
-            font-family: var(--font-display);
-            font-size: 1.1rem;
+            font-family: var(--font-body);
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
             color: var(--text-primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.45rem;
             padding-bottom: 0.4rem;
             border-bottom: 1px solid var(--border);
         }
 
-        /* Tool entries (Simon-style: name — description on one line) */
+        /* Tool entries */
         .tool-list {
             list-style: none;
         }
         .tool-list li {
             padding: 0.35rem 0;
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             line-height: 1.5;
         }
         .tool-list li.hidden {
@@ -186,7 +218,7 @@
             font-weight: 500;
         }
         .tool-list a:hover {
-            text-decoration: underline;
+            color: var(--accent-bright);
         }
         .tool-list .tool-desc {
             color: var(--text-secondary);
@@ -194,18 +226,18 @@
 
         /* Footer */
         .site-footer {
-            margin-top: 3rem;
-            padding-top: 1.5rem;
+            margin-top: 2.5rem;
+            padding-top: 1.25rem;
             border-top: 1px solid var(--border);
             text-align: center;
         }
         .site-footer p {
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             color: var(--text-muted);
             font-family: var(--font-mono);
         }
         .site-footer a {
-            color: var(--text-secondary);
+            color: var(--text-muted);
             text-decoration: none;
         }
         .site-footer a:hover {
@@ -214,7 +246,7 @@
 
         /* Search highlight */
         mark {
-            background: rgba(201, 125, 74, 0.25);
+            background: rgba(232, 120, 74, 0.22);
             color: var(--text-primary);
             border-radius: 2px;
             padding: 0 1px;
@@ -245,7 +277,7 @@
                 type="text"
                 class="search-input"
                 id="searchInput"
-                placeholder="Start typing to search all tools…"
+                placeholder="Start typing to search all tools..."
                 autocomplete="off"
             >
             <div class="tool-count" id="toolCount"></div>

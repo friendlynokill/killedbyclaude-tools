@@ -3,25 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1A1715">
     <title>Timestamp Converter — tools.killedbyclaude.com</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-deep: #0a0a0c;
-            --bg-surface: #131316;
-            --bg-raised: #1a1a1f;
-            --bg-hover: #222228;
-            --accent: #c97d4a;
-            --accent-dim: #a5623a;
-            --text-primary: #e8e4df;
-            --text-secondary: #9d9a94;
-            --text-muted: #5e5c57;
-            --border: #2a2a2f;
-            --font-display: 'DM Serif Display', serif;
-            --font-body: 'Source Sans 3', sans-serif;
-            --font-mono: 'IBM Plex Mono', monospace;
+            --bg-deep: #1A1715;
+            --bg-surface: #211D19;
+            --bg-card: #262220;
+            --bg-card-hover: #2E2926;
+            --accent: #E8784A;
+            --accent-bright: #F09070;
+            --accent-dim: #C45E32;
+            --text-primary: #F5F0EB;
+            --text-secondary: #B8AFA5;
+            --text-muted: #7A7268;
+            --border: rgba(245, 240, 235, 0.08);
+            --border-accent: rgba(232, 120, 74, 0.18);
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Menlo', monospace;
+            --radius: 14px;
+            --radius-sm: 8px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,12 +36,26 @@
             color: var(--text-primary);
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 15% -5%, rgba(232, 120, 74, 0.06), transparent),
+                radial-gradient(ellipse 50% 40% at 85% 8%, rgba(180, 140, 100, 0.03), transparent);
+            pointer-events: none;
         }
 
         .container {
             max-width: 620px;
             margin: 0 auto;
-            padding: 2.5rem 1.5rem 4rem;
+            padding: 2rem 1.5rem 3.5rem;
+            position: relative;
+            z-index: 1;
         }
 
         header {
@@ -45,125 +63,154 @@
         }
         header a {
             font-family: var(--font-mono);
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: var(--text-muted);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 0.3rem;
+            transition: color 0.15s;
         }
         header a:hover { color: var(--accent); }
 
         h1 {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            margin-top: 1rem;
-            margin-bottom: 0.3rem;
+            font-family: var(--font-body);
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-top: 0.85rem;
+            margin-bottom: 0.25rem;
         }
         .subtitle {
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             color: var(--text-secondary);
-            margin-bottom: 1.8rem;
+            margin-bottom: 1.5rem;
         }
 
         .live-clock {
             display: flex;
             align-items: center;
-            gap: 0.8rem;
-            padding: 0.7rem 0.9rem;
-            background: var(--bg-surface);
+            gap: 0.7rem;
+            padding: 0.65rem 0.85rem;
+            background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            margin-bottom: 1.8rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 1.5rem;
             font-family: var(--font-mono);
-            font-size: 0.82rem;
+            font-size: 0.8rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .live-clock::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(180deg, rgba(245, 240, 235, 0.02), transparent 50%);
+            pointer-events: none;
         }
         .live-clock .label {
             color: var(--text-muted);
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             letter-spacing: 0.03em;
         }
         .live-clock .value {
             color: var(--accent);
             font-weight: 500;
-            font-size: 0.92rem;
+            font-size: 0.88rem;
         }
 
         .section-label {
-            font-family: var(--font-display);
-            font-size: 0.95rem;
+            font-family: var(--font-body);
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
             color: var(--text-primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
         }
 
         .input-group {
-            margin-bottom: 1rem;
+            margin-bottom: 0.85rem;
         }
 
         input[type="text"],
         input[type="datetime-local"],
         select {
             width: 100%;
-            padding: 0.6rem 0.8rem;
+            padding: 0.55rem 0.8rem;
             font-family: var(--font-mono);
-            font-size: 0.85rem;
-            background: var(--bg-surface);
+            font-size: 0.82rem;
+            background: var(--bg-card);
             color: var(--text-primary);
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             outline: none;
-            transition: border-color 0.15s;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
         input:focus, select:focus {
-            border-color: var(--accent-dim);
+            border-color: var(--border-accent);
+            box-shadow: 0 0 0 3px rgba(232, 120, 74, 0.08);
         }
         input::placeholder { color: var(--text-muted); }
+        select {
+            color-scheme: dark;
+        }
 
         .row {
             display: flex;
-            gap: 0.6rem;
-            margin-top: 0.4rem;
+            gap: 0.5rem;
+            margin-top: 0.35rem;
         }
         .row > * { flex: 1; }
 
         .results {
-            background: var(--bg-surface);
+            background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            margin-top: 0.6rem;
-            margin-bottom: 1.8rem;
+            border-radius: var(--radius-sm);
+            margin-top: 0.5rem;
+            margin-bottom: 1.5rem;
             overflow: hidden;
+            position: relative;
+        }
+        .results::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(180deg, rgba(245, 240, 235, 0.02), transparent 50%);
+            pointer-events: none;
         }
         .result-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.55rem 0.9rem;
+            padding: 0.5rem 0.85rem;
             border-bottom: 1px solid var(--border);
-            font-size: 0.84rem;
+            font-size: 0.82rem;
             cursor: pointer;
             transition: background 0.15s;
+            position: relative;
         }
         .result-row:last-child { border-bottom: none; }
-        .result-row:hover { background: var(--bg-raised); }
+        .result-row:hover { background: var(--bg-card-hover); }
         .result-row .label {
             font-family: var(--font-mono);
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             color: var(--text-muted);
             letter-spacing: 0.03em;
         }
         .result-row .right {
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.35rem;
         }
         .result-row .value {
             font-family: var(--font-mono);
             color: var(--text-primary);
-            font-size: 0.82rem;
+            font-size: 0.8rem;
         }
         .result-row .copy-hint {
-            font-size: 0.62rem;
+            font-size: 0.6rem;
             color: var(--text-muted);
             opacity: 0;
             transition: opacity 0.15s;
@@ -172,22 +219,23 @@
         .result-row.copied .value { color: var(--accent); }
 
         footer {
-            padding: 2rem 0 0;
+            padding: 1.5rem 0 0;
             border-top: 1px solid var(--border);
-            margin-top: 2rem;
+            margin-top: 1.5rem;
             text-align: center;
         }
         footer a {
             font-family: var(--font-mono);
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             color: var(--text-muted);
             text-decoration: none;
+            transition: color 0.15s;
         }
         footer a:hover { color: var(--accent); }
 
         @media (max-width: 500px) {
-            .row { flex-direction: column; gap: 0.5rem; }
-            .live-clock { flex-direction: column; gap: 0.3rem; align-items: flex-start; }
+            .row { flex-direction: column; gap: 0.4rem; }
+            .live-clock { flex-direction: column; gap: 0.25rem; align-items: flex-start; }
         }
     </style>
 </head>
