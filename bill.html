@@ -204,6 +204,7 @@ function ymdToString(ymd) {
     if (!ymd) return '';
     return ymd.y + '-' + String(ymd.m).padStart(2, '0') + '-' + String(ymd.d).padStart(2, '0');
 }
+function ymKey(year, month) { return year * 100 + month; }
 // For sorting: convert to comparable number
 function ymdSort(ymd) { return ymd.y * 10000 + ymd.m * 100 + ymd.d; }
 
@@ -268,8 +269,9 @@ function findCurrentMonthDelCol(delCols, year, month) {
     for (const c of delCols) {
         if (c.startY === year && c.startM === month && c.endY === year && c.endM === month) return c;
     }
+    const target = ymKey(year, month);
     for (const c of delCols) {
-        if (c.startY <= year && c.startM <= month && c.endY >= year && c.endM >= month) return c;
+        if (ymKey(c.startY, c.startM) <= target && ymKey(c.endY, c.endM) >= target) return c;
     }
     return null;
 }
@@ -305,6 +307,18 @@ function findCol(headers, name) {
     return -1;
 }
 
+function calcRowOutstandingByMonthEnd(row, col, cumDelCols, year, month) {
+    const pt = parseDate(row[col.payTime]);
+    if (!ymdOnOrBeforeMonthEnd(pt, year, month)) return 0;
+
+    const rt = col.refTime >= 0 ? parseDate(row[col.refTime]) : null;
+    const paid = parseNum(row[col.amtRcv]);
+    const refunded = rt && ymdOnOrBeforeMonthEnd(rt, year, month) ? parseNum(row[col.amtRef]) : 0;
+    let cumDel = 0;
+    for (const dc of cumDelCols) cumDel += parseNum(row[dc.col]);
+    return paid - refunded - cumDel;
+}
+
 function process() {
     if (!sheetRows) return;
     const year = parseInt(yearSel.value), month = parseInt(monthSel.value);
@@ -314,11 +328,11 @@ function process() {
         entity: findCol(headers, '收款主体'), acct: findCol(headers, '账号名'),
         amtRcv: findCol(headers, '已收款金额'), payTime: findCol(headers, '收款时间'),
         amtRef: findCol(headers, '已退款金额'), refTime: findCol(headers, '退款时间'),
-        income: findCol(headers, '收入金额'), pkg: findCol(headers, '套餐类型'),
+        pkg: findCol(headers, '套餐类型'),
     };
     const missing = [];
     if (col.entity < 0) missing.push('收款主体'); if (col.amtRcv < 0) missing.push('已收款金额');
-    if (col.payTime < 0) missing.push('收款时间'); if (col.income < 0) missing.push('收入金额');
+    if (col.payTime < 0) missing.push('收款时间');
     if (missing.length) { showStatus('找不到以下列: ' + missing.join(', '), 'error'); return; }
 
     const allDelCols = parseDeliveryColumns(headers);
@@ -338,18 +352,13 @@ function process() {
         const rt = col.refTime >= 0 ? parseDate(row[col.refTime]) : null;
         const aR = parseNum(row[col.amtRcv]);
         const aF = col.amtRef >= 0 ? parseNum(row[col.amtRef]) : 0;
-        const income = col.income >= 0 ? parseNum(row[col.income]) : 0;
 
         if (ymdInMonth(pt, year, month)) { e.tRcv += aR; e.pays.push({ name: acct, amt: aR, date: pt, pkg: pkgType }); }
         if (ymdInMonth(rt, year, month)) { e.tRef += aF; e.refs.push({ name: acct, amt: aF, date: rt, pkg: pkgType }); }
         if (curDelCol) {
             const da = parseNum(row[curDelCol.col]); if (da > 0) { e.tDel += da; e.dels.push({ name: acct, amt: da, pkg: pkgType }); }
         }
-        if (ymdOnOrBeforeMonthEnd(pt, year, month)) {
-            let cumDel = 0;
-            for (const dc of cumDelCols) cumDel += parseNum(row[dc.col]);
-            e.tUnd += income - cumDel;
-        }
+        e.tUnd += calcRowOutstandingByMonthEnd(row, col, cumDelCols, year, month);
     }
     Object.values(ents).forEach(e => {
         e.pays.sort((a, b) => ymdSort(a.date) - ymdSort(b.date));
